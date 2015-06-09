@@ -251,9 +251,9 @@ When we create a GenServer in Elixir a default `handle_info/2` that just disrega
 ### `Supervisor`
 A supervisor is a process that trap exits. It is responsible for starting and linking processes, which can be other supervisor processes, creating supervision trees.
 
-Should a process die it will get respawned using a given strategy: `:one_for_one`, `:one_for_all`, `:rest_for_one`, or `:simple_one_for_one`.
+Should a process die it will get respawned using a given strategy (`:one_for_one`, `:one_for_all`, `:rest_for_one`, or `:simple_one_for_one`) and the children will get restarted using the same arguments they got started with in the first place. State has to be recalculated in the case of a crash, and everything that was in the process mailbox is forever lost.
 
-Should a given supervisor get terminated it will take all its children with it.
+If a given supervisor get terminated it will take all its children with it.
 
 Restarting children should be planned carefully, because the new child will be a new process: Every process that need to know about the process need to know that it now have new and different Pid, and the state which it is initialized will have to be calculated somehow, or fetched from a database.
 
