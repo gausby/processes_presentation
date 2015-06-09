@@ -132,6 +132,8 @@ iex(1)>
 
 Notice that iex restarted; it's counter is back at one. We spawned and linked the failing process from iex which took down both processes. The iex prompt got restarted because it is supervised by another process, which promptly restarted the process when it got notified of its childs untimely demise.
 
+Alternatively `Process.link/1` can be used to create the link on an already created process. `Process.unlink/1` can be used to remove a link, it takes a Pid as the argument.
+
 
 Monitoring processes
 --------------------
@@ -155,6 +157,8 @@ iex(3)> flush
 ```
 
 It recieved a `:DOWN`-message in its mailbox with information about which Pid failed and for what reason.
+
+Alternatively `Process.monitor/1` can be used to create the monitor on an already created process. It will return a monitor reference which can be stopped using `Process.demonitor/1`.
 
 
 Trapping failures
