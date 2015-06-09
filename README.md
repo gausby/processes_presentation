@@ -29,9 +29,9 @@ The process was spawned and immediately returned `:ok`. It had nothing else to d
 Notice, when we run iex it is actually a couple of processes as well. We can get the Pid of the iex session by calling `self/0`. `self/0` will always return the current process, think of it like `this`/`self` from an object language.
 
 
-Message box
------------
-Every process has a message box, and we communicate with a process by sending it messages which will go to its message box. The process can choose to do something about these messages, or let them rot in the message box; this is done by either flushing the messages, using `flush/0` or with a `receive`-block.
+The Process Mailbox
+-------------------
+Every process has a mailbox, and we communicate with a process by sending it messages which will go to its mailbox. The process can choose to do something about these messages, or let them rot in the mailbox; this is done by either flushing the messages, using `flush/0` or with a `receive`-block.
 
 ```elixir
 iex(3)> send self, :foo
@@ -46,9 +46,9 @@ iex(6)> flush
 :ok
 ```
 
-First we send ourselves the message `:foo`, and then the message `:bar` using the `send/2` function. Notice that the messages are stored until we do something about them; in this case we call the `flush/0` function. Calling the `flush/0` function again will reveal that the messages has been removed from the message box.
+First we send ourselves the message `:foo`, and then the message `:bar` using the `send/2` function. Notice that the messages are stored until we do something about them; in this case we call the `flush/0` function. Calling the `flush/0` function again will reveal that the messages has been removed from the mailbox.
 
-The message box is a queue, processing its incoming messages on a first message in, first message out (FIFO) bases. When we want to react to incoming messages we use the `receive` construct.
+The mailbox is a queue, processing its incoming messages on a first message in, first message out (FIFO) bases. When we want to react to incoming messages we use the `receive` construct.
 
 ```elixir
 iex(7)> my_process = spawn(fn ->
@@ -78,7 +78,7 @@ iex(11)> flush
 :ok
 ```
 
-Notice; we answer the sender by sending the message back using the same method that we used to send the message, and the message ended up in the message box of our iex-process.
+Notice; we answer the sender by sending the message back using the same method that we used to send the message, and the message ended up in the mailbox of our iex-process.
 
 
 Unknown message types
@@ -96,7 +96,7 @@ iex(13)> send my_process, {self, :how_do_you_do}
 {#PID<0.59.0>, :how_do_you_do}
 ```
 
-It just store the message in its message box. This is something we should have in mind, because a message box with a million messages lingering around could bring down a system. We can use `Process.info(my_process)[:messages]` to see debug information about the messages in our process. This is not something we would do in our code, because it is a heavy operation, but it is neat to do in a debugging session.
+It just store the message in its mailbox. This is something we should have in mind, because a mailbox with a million messages lingering around could bring down a system. We can use `Process.info(my_process)[:messages]` to see debug information about the messages in our process. This is not something we would do in our code, because it is a heavy operation, but it is neat to do in a debugging session.
 
 
 Linking processes
@@ -143,7 +143,7 @@ iex(2)> my_process = spawn_monitor(fn -> raise "oh my, again!" end)
 iex(3)>
 ```
 
-Notice the prompt. The iex prompt was not torn down when our spawned process died. It got a notification about it though in its message box:
+Notice the prompt. The iex prompt was not torn down when our spawned process died. It got a notification about it though in its mailbox:
 
 ```elixir
 iex(3)> flush
@@ -152,7 +152,7 @@ iex(3)> flush
 :ok
 ```
 
-It recieved a `:DOWN`-message in its message box with information about which Pid failed and for what reason.
+It recieved a `:DOWN`-message in its mailbox with information about which Pid failed and for what reason.
 
 
 Trapping failures
@@ -170,7 +170,7 @@ my_process = spawn_link(fn -> raise "oh my, now that again?" end)
 iex(5)> 
 ```
 
-Notice that we linked the process, and even though it was linked it did not kill the parent process. A message ended up in the message box though:
+Notice that we linked the process, and even though it was linked it did not kill the parent process. A message ended up in the mailbox though:
 
 ```elixir
 iex(5) flush
@@ -194,8 +194,8 @@ OTP
 ---
 Now we know that:
 
-  * All processes has a message box
-  * We can react on incoming messages in message boxes using `receive`
+  * All processes has a mailbox
+  * We can react on incoming messages in mailboxes using `receive`
   * We can have processes monitor other processes
   * We can link two processes making both go down if one should fail
   * We can trap exits, limiting the damage of a set of nodes that are going down
@@ -210,7 +210,7 @@ Actually a GenServer is an abstraction that creates a `receive`-loop and passes 
   * `handle_cast` is a message with the format: `{:$gen_cast, *payload*}`
   * `handle_info` is everything else.
 
-That is why we would write a catch-all handler if we overwrite default `handle_info`. Otherwise our server could run out of memory because of processes with message boxes full of unprocessed messages.
+That is why we would write a catch-all handler if we overwrite default `handle_info`. Otherwise our server could run out of memory because of processes with mailboxes full of unprocessed messages.
 
 
 ### `Supervisor`
