@@ -98,6 +98,8 @@ iex(13)> send my_process, {self, :how_do_you_do}
 
 It just store the message in its mailbox. This is something we should have in mind, because a mailbox with a million messages lingering around could bring down a system. We can use `Process.info(my_process)[:messages]` to see debug information about the messages in our process. This is not something we would do in our code, because it is a heavy operation, but it is neat to do in a debugging session.
 
+Notice that the `send/2` command evaluate to the message it is sending to the remote process. That is why iex will print the message to the console.
+
 
 Linking processes
 -----------------
