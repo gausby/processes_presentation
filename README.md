@@ -195,6 +195,36 @@ spawn_link(MyModule, :my_function, [])
 
 This would spawn and link a process using the function `my_function` on the `MyModue`-module with and empty list of arguments. The semantics are the same for the other variants.
 
+One important thing that has been omitted so far is the fact that a receive block will receive one message and then close, in other words only react on the first message the process receive in its mailbox. We would reach out for a receive-loop if we want to react on all messages that a process receive. This is basically a function that defines the receive-do-block, blocks until it receive a message on which it reacts, and then call itself creating the receive-do-block yet again.
+
+```elixir
+defmodule Example do
+  def receive_loop do
+    receive do
+      {sender, :hi} -> send sender, :hello
+    end
+    receive_loop
+  end
+end
+```
+
+If we spawn this module using `spawn/3` we can send it multiple messages that will get handled.
+
+```elixir
+iex(1)> my_process = spawn(Example, :receive_loop, [])
+#PID<0.64.0>
+iex(2)> send my_process, {self, :hi}
+{#PID<0.62.0>, :hi}
+iex(3)> send my_process, {self, :hi}
+{#PID<0.62.0>, :hi}
+iex(4)> flush
+:hello
+:hello
+:ok
+```
+
+Notice that we have to pass in the empty argument list. Elixir has tail-call optimization, so do not worry about this pattern.
+
 
 OTP
 ---
@@ -205,6 +235,7 @@ Now we know that:
   * We can have processes monitor other processes
   * We can link two processes making both go down if one should fail
   * We can trap exits, limiting the damage of a set of nodes that are going down
+  * If we want to handle more than one message we would build a receive-loop
 
 This is the stuff Supervisors and GenServers are made of.
 
