@@ -46,7 +46,7 @@ iex(6)> flush
 :ok
 ```
 
-First we send ourselves the message `:foo`, and then the message `:bar` using the `send/2` function. Notice that the messages are stored until we do something about them; in this case we call the `flush/0` function. Calling the `flush/0` function again will reveal that the messages has been removed from the mailbox.
+First we send ourselves the message `:foo`, and then the message `:bar` using the `send/2` function. Notice that the messages are stored until we do something about them; in this case we call the `flush/0` function, which is available in iex. Calling the `flush/0` function again will reveal that the messages has been removed from the mailbox.
 
 The mailbox is a queue, processing its incoming messages on a first message in, first message out (FIFO) bases. When we want to react to incoming messages we use the `receive` construct.
 
