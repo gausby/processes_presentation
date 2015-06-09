@@ -80,7 +80,7 @@ iex(11)> flush
 
 Notice; we answer the sender by sending the message back using the same method that we used to send the message, and the message ended up in the mailbox of our iex-process.
 
-Also notice that the receive block only handle one message and then stop processing messages received from then on. Later (in the 'Working with modules'-section) we will get into how to handle all message with a pattern called a receive-loop, but for now we will continute our exploration.
+Also notice that the receive block only handle one message and then stop processing messages received from then on. Later (in the 'Working with modules'-section) we will get into how to handle all message with a pattern called a receive-loop, but for now we will continue our exploration.
 
 
 Unknown message types
@@ -132,14 +132,14 @@ Interactive Elixir (1.0.4) - press Ctrl+C to exit (type h() ENTER for help)
 iex(1)>
 ```
 
-Notice that iex restarted; it's counter is back at one. We spawned and linked the failing process from iex which took down both processes. The iex prompt got restarted because it is supervised by another process, which promptly restarted the process when it got notified of its childs untimely demise.
+Notice that iex restarted; it's counter is back at one. We spawned and linked the failing process from iex which took down both processes. The iex prompt got restarted because it is supervised by another process, which promptly restarted the process when it got notified of its child's untimely demise.
 
 Alternatively `Process.link/1` can be used to create the link on an already created process. `Process.unlink/1` can be used to remove a link, it takes a Pid as the argument.
 
 
 Monitoring processes
 --------------------
-Tearing everything down when something fails is a strategy, but sometimes we want to just get notified that a process has died so that we can handle the situration accordingly, ie. respawn it without loosing our state. We can use `spawn_monitor/1` to create a monitored process.
+Tearing everything down when something fails is a strategy, but sometimes we want to just get notified that a process has died so that we can handle the situation accordingly, IE. re-spawn it without loosing our state. We can use `spawn_monitor/1` to create a monitored process.
 
 ```elixir
 iex(2)> my_process = spawn_monitor(fn -> raise "oh my, again!" end)
@@ -158,7 +158,7 @@ iex(3)> flush
 :ok
 ```
 
-It recieved a `:DOWN`-message in its mailbox with information about which Pid failed and for what reason.
+It received a `:DOWN`-message in its mailbox with information about which Pid failed and for what reason.
 
 Alternatively `Process.monitor/1` can be used to create the monitor on an already created process. It will return a monitor reference which can be stopped using `Process.demonitor/1`.
 
@@ -247,19 +247,19 @@ Actually a GenServer is an abstraction that creates a `receive`-loop and passes 
 
 `handle_call/3` and `handle_cast/2` are handled in a receive-do-block like the ones we have seen so far--technically they have an internal format, but we would *never* send messages to them directly. Everything that does not fit into that internal format used by cast and call will get passed on to `handle_info/2`.
 
-When we create a GenServer in Elixir a default `handle_info/2` that just disregard all incomming messages are set up for us. This has an implication: If we overwrite this handler we will have to setup a catch-all handler of our own. Otherwise our server could run out of memory because of processes with mailboxes full of unprocessed messages.
+When we create a GenServer in Elixir a default `handle_info/2` that just disregard all incoming messages are set up for us. This has an implication: If we overwrite this handler we will have to setup a catch-all handler of our own. Otherwise our server could run out of memory because of processes with mailboxes full of unprocessed messages.
 
 
 ### `Supervisor`
 A supervisor is a process that trap exits. It is responsible for starting and linking processes, which can be other supervisor processes, creating supervision trees.
 
-Should a process die it will get respawned using a given strategy (`:one_for_one`, `:one_for_all`, `:rest_for_one`, or `:simple_one_for_one`) and the children will get restarted using the same arguments they got started with in the first place. State has to be recalculated in the case of a crash, and everything that was in the process mailbox is forever lost.
+Should a process die it will get re-spawned using a given strategy (`:one_for_one`, `:one_for_all`, `:rest_for_one`, or `:simple_one_for_one`) and the children will get restarted using the same arguments they got started with in the first place. State has to be recalculated in the case of a crash, and everything that was in the process mailbox is forever lost.
 
 If a given supervisor get terminated it will take all its children with it.
 
-Restarting children should be planned carefully, because the new child will be a new process: Every process that need to know about the process need to know that it now have new and different Pid, and the state which it is initialized will have to be calculated somehow, or fetched from a database.
+Restarting children should be planned carefully, because the new child will be a new process: Every process that need to know about the process need to know that it now have new and different Paid, and the state which it is initialized will have to be calculated somehow, or fetched from a database.
 
-Also, great care should be taken when saving state, as trying to respawn a failing process from corrupt state will lead to nowhere fast. This is tricky stuff, but it is true for any programming paradigm out there--we deal with it by having options for how fast to retry failing respawns, and options for how many respawns we will attempt, before the supervisor finally kills itself and throw the error to its supervisor, who will respawn that branch according to its specifications--or take down the entire system if it was top level--game over.
+Also, great care should be taken when saving state, as trying to re-spawn a failing process from corrupt state will lead to nowhere fast. This is tricky stuff, but it is true for any programming paradigm out there--we deal with it by having options for how fast to retry failing re-spawns, and options for how many re-spawns we will attempt, before the supervisor finally kills itself and throw the error to its supervisor, who will re-spawn that branch according to its specifications--or take down the entire system if it was top level--game over.
 
 todo, perhaps: mention `worker` and `supervise`
 
