@@ -24,6 +24,8 @@ iex(2)> Process.alive?(my_process)
 false
 ```
 
+The process was spawned and immediately returned `:ok`. It had nothing else to do so it closed itself down; that is why the `Process.alive/1` returned `false`.
+
 Notice, when we run iex it is actually a couple of processes as well. We can get the Pid of the iex session by calling `self/0`. `self/0` will always return the current process, think of it like `this`/`self` from an object language.
 
 
