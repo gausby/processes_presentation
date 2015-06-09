@@ -48,7 +48,7 @@ iex(6)> flush
 
 First we send ourselves the message `:foo`, and then the message `:bar` using the `send/2` function. Notice that the messages are stored until we do something about them; in this case we call the `flush/0` function, which is available in iex. Calling the `flush/0` function again will reveal that the messages has been removed from the mailbox.
 
-The mailbox is a queue, processing its incoming messages on a first message in, first message out (FIFO) bases. When we want to react to incoming messages we use the `receive` construct.
+The mailbox is a queue, processing its incoming messages on a first message in, first message out (FIFO) bases. When we want to react to incoming messages (or the fist message in the queue) we use the `receive` construct.
 
 ```elixir
 iex(7)> my_process = spawn(fn ->
@@ -79,6 +79,8 @@ iex(11)> flush
 ```
 
 Notice; we answer the sender by sending the message back using the same method that we used to send the message, and the message ended up in the mailbox of our iex-process.
+
+Also notice that the receive block only handle one message and then stop processing messages received from then on. Later (in the 'Working with modules'-section) we will get into how to handle all message with a pattern called a receive-loop, but for now we will continute our exploration.
 
 
 Unknown message types
