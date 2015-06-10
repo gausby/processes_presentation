@@ -1,0 +1,352 @@
+* Something about Processes
+
+ - Stockholm Elixir
+ - June 10, 2015
+
+
+* Introduction, me!
+
+ - Martin
+ - 4 hours of sleep
+ - Has a background in JavaScript
+ - First time giving this talk
+
+* Processes
+
+ Let's talk about processes
+
+* Spawning processes
+
+ - *spawn/1* primitive
+
+* Spawning processes
+#+BEGIN_SRC elixir
+ iex(1)> my_process = spawn(fn -> :ok end)
+ #PID<0.62.0>
+#+END_SRC
+
+ - Executes a function in a new process
+ - returns a Pid
+
+* Spawning processes
+#+BEGIN_SRC elixir
+ iex(1)> my_process = spawn(fn -> :ok end)
+ #PID<0.62.0>
+
+ iex(2)> Process.alive?(my_process)
+ false
+#+END_SRC
+ Processes close them selves down when they have nothing left to do.
+
+* Sending messages to processes
+
+ - Every process has a mailbox
+ - We can put messages into a process mailbox with `send/2`
+ - The process handles messages, or let them rot
+
+
+* Sending messages to processes
+#+BEGIN_SRC elixir
+ iex(3)> send self, :foo
+ :foo
+ iex(4)> send self, :bar
+ :bar
+ iex(5)> flush
+ :foo
+ :bar
+ :ok
+ iex(6)> flush
+ :ok
+#+END_SRC
+
+* Sending messages to processes
+
+ - The process mailbox is a *FIFO* queue
+ - We use *receive*-blocks to handle messages in the queue
+
+* Sending messages to processes
+#+BEGIN_SRC elixir
+ iex(7)> my_process = spawn(fn ->
+ ...(7)>   receive do
+ ...(7)>     :hi -> IO.puts "yo!"
+ ...(7)>   end
+ ...(7)> end)
+ #PID<0.105.0>
+ iex(8)> send my_process, :hi
+ yo!
+ :hi
+#+END_SRC
+
+* Sending messages to processes
+
+ - processes does not know about the sender
+ - they are totally isolated
+ - we need to send a tuple like {sender, :message}
+
+ (example)
+
+* Sending messages to processes
+#+BEGIN_SRC elixir
+ iex(9)> my_process = spawn(fn ->
+ ...(9)>   receive do
+ ...(9)>     {sender, :hi} -> send sender, :yo
+ ...(9)>   end
+ ...(9)> end)
+ #PID<0.112.0>
+ iex(10)> send my_process, {self, :hi}
+ {#PID<0.59.0>, :hi}
+ iex(11)> flush
+ :yo
+ :ok
+#+END_SRC
+
+ but...
+
+* Sending messages to processes
+#+BEGIN_SRC elixir
+ iex(12)> send my_process, {self, :hi}
+ {#PID<0.59.0>, :hi}
+ iex(13)> flush
+ :ok
+#+END_SRC
+The mailbox has stopped receiving messages!?
+
+*receive* will only handle one message, and then it will leave the stage (more on that later)
+
+
+* Unknown message types
+
+ - What would happen if the process does not understand the message we send it?
+
+ ...
+
+* Unknown message types
+#+BEGIN_SRC elixir
+ iex(14)> my_process = spawn(fn ->
+ ...(14)>   receive do
+ ...(14)>     {sender, :hi} -> send sender, :yo
+ ...(14)>   end
+ ...(14)> end)
+ #PID<0.120.0>
+ iex(15)> send my_process, {self, :how_do_you_do}
+ {#PID<0.59.0>, :how_do_you_do}
+#+END_SRC
+
+...
+
+* Unknown message types
+#+BEGIN_SRC elixir
+ iex(14)> my_process = spawn(fn ->
+ ...(14)>   receive do
+ ...(14)>     {sender, :hi} -> send sender, :yo
+ ...(14)>   end
+ ...(14)> end)
+ #PID<0.120.0>
+ iex(15)> send my_process, {self, :how_do_you_do}
+ {#PID<0.59.0>, :how_do_you_do}
+#+END_SRC
+  - Nothing!
+
+* Unknown message types
+
+ - Undhandled messages will *linger*
+ - Beware of *memory* taken by unhandled messages
+ - Implement *catch all* matches that discard unknown messages
+ - *Process.info(Pid)[:messages]* list messages stored in a process's mailbox
+
+* * *
+
+* Handling failures
+
+ - Crashing
+ - Linking
+ - Monitoring
+ - Trapping errors
+
+* Crashing a spawned process
+
+ - First let's crash a regular spawned process
+
+* Crashing a spawned process
+#+BEGIN_SRC elixir -n
+ iex(17)> my_process = spawn(fn -> raise "oh my" end)
+ #PID<0.61.0>
+
+ 22:53:32.824 [error] Error in process <0.61.0> with exit value: {#{'__exception__'=>true,'__struct__'=>'Elixir.RuntimeError',message=><<5 bytes>>},[{erlang,apply,2,[]}]}
+
+ iex(18)> Process.alive?(my_process)
+ false
+#+END_SRC
+
+* Crashing a spawned process
+
+ - Not pretty, but very *informative*
+ - No other *processes was harmed* (isolation)
+ - processes created with *spawn/1* encapsulates their failures
+
+ ...
+
+* Crashing a spawned process
+
+ - But! No one got the news about this crash though :-/
+
+
+* Linking processes
+
+ - *spawn_link/1* primitive
+ - *spawns* *and* *links* the process
+
+ ...let's link a process to our iex session and crash it
+
+* Linking processes
+#+BEGIN_SRC elixir
+ iex(16)> spawn_link(fn -> raise "oh my!" end)
+ ** (EXIT from #PID<0.59.0>) an exception was raised:
+     ** (RuntimeError) oh my!
+         :erlang.apply/2
+ 
+ 22:57:34.582 [error] Error in process <0.66.0> with exit value: {#{'__exception__'=>true,'__struct__'=>'Elixir.RuntimeError',message=><<6 bytes>>},[{erlang,apply,2,[]}]}
+ 
+ 
+ Interactive Elixir (1.0.4) - press Ctrl+C to exit (type h() ENTER for help)
+ iex(1)>
+#+END_SRC
+ ...
+
+* Linking processes
+
+ - One crash, both crash
+ - Link processes that rely on each other to function
+
+ ...if we don't want it to crash we can...
+
+* Monitoring processes
+
+ - *spawn_monitor/1* primitive
+ - spawns *and* monitor the process
+
+* Monitoring processes
+#+BEGIN_SRC elixir
+ iex(2)> my_process = spawn_monitor(fn -> raise "oh my, again!" end)
+ {#PID<0.77.0>, #Reference<0.0.0.182>}
+ 
+ 23:10:05.232 [error] Error in process <0.77.0> with exit value: {#{'__exception__'=>true,'__struct__'=>'Elixir.RuntimeError',message=><<13 bytes>>},[{erlang,apply,2,[]}]}
+ iex(3)>
+#+END_SRC
+
+* Monitoring processes
+
+ - The iex counter didn't crash
+ - but if we flush...
+
+* Monitoring processes
+#+BEGIN_SRC elixir
+ iex(3)> flush
+ {:DOWN, #Reference<0.0.0.182>, :process, #PID<0.77.0>,
+  {%RuntimeError{message: "oh my, again!"}, [{:erlang, :apply, 2, []}]}}
+ :ok
+#+END_SRC
+
+ - We got a message we could have *reacted* on!
+
+* Trapping errors
+
+ - Monitors know when observed processes crash
+ - Processes that are observed does not know about dying observers
+ - sometimes we want a link relation does not crash both
+
+ Enter trapping errors *Process.flag(:trap_exit, true)*
+
+* Trapping errors
+#+BEGIN_SRC elixir
+ iex(4)> Process.flag(:trap_exit, true)
+ false
+ my_process = spawn_link(fn -> raise "oh my, now that again?" end)
+ #PID<0.89.0>
+ 
+ 23:28:24.339 [error] Error in process <0.89.0> with exit value: {#{'__exception__'=>true,'__struct__'=>'Elixir.RuntimeError',message=><<22 bytes>>},[{erlang,apply,2,[]}]}
+ 
+ iex(5)> 
+#+END_SRC
+
+ The link didn't bring the iex session down
+
+
+* One more thing
+
+ Our receive-do-blocks stop receiving after one message.
+
+ enter the receive-loop pattern ...
+
+* Spawning a module
+#+BEGIN_SRC elixir
+ defmodule Example do
+   def receive_loop do
+     receive do
+       {sender, :hi} -> send sender, :hello
+     end
+     receive_loop
+   end
+ end
+#+END_SRC
+ ...
+
+* Spawning a module
+#+BEGIN_SRC elixir
+ iex(1)> my_process = spawn(Example, :receive_loop, [])
+ #PID<0.64.0>
+ iex(2)> send my_process, {self, :hi}
+ {#PID<0.62.0>, :hi}
+ iex(3)> send my_process, {self, :hi}
+ {#PID<0.62.0>, :hi}
+ iex(4)> flush
+ :hello
+ :hello
+ :ok
+#+END_SRC
+
+* What we have learned
+
+ - All processes has a mailbox
+ - receive react on incoming messages
+ - If we want to handle more than one message we would build a receive-loop
+
+* What we have learned
+
+ - We can have processes monitor other processes
+ - We can link two processes, both go down if one should fail
+ - We can trap exits, stopping error cascade
+
+* Smells like some OTP constructs
+
+ - GenServer
+ - Supervisor
+ ...
+
+* OTP GenServer
+
+ - a process
+ - a receive-loop
+ - passing state around with callbacks
+
+* OTP GenServer
+
+ The GenServer receive-do-block:
+
+ - *handle_cast*, *handle_call*: special internal format
+ - *handle_info* handles everything else
+
+ Overwriting *handle_info* require us to reimplement match-all!
+
+* OTP Supervisor
+
+ - A process 
+ - Linked to its children
+ - Traps exits
+ - Implements various restart strategies
+
+* Conclusion
+
+ - Processes are not to be feared
+ - Use OTP construct where possible
+ - https://github.com/gausby/processes_presentation
