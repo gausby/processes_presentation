@@ -1,15 +1,13 @@
 * Something about Processes
 
- - Stockholm Elixir
- - June 10, 2015
-
+ - Copenhagen Elixir
+ - June 16, 2015
 
 * Introduction, me!
 
  - Martin
- - 4 hours of sleep
  - Has a background in JavaScript
- - First time giving this talk
+ - Second time giving this talk
 
 * Processes
 
@@ -19,12 +17,13 @@
 
  - *spawn/1* primitive
 
+ ...
+
 * Spawning processes
 #+BEGIN_SRC elixir
  iex(1)> my_process = spawn(fn -> :ok end)
  #PID<0.62.0>
 #+END_SRC
-
  - Executes a function in a new process
  - returns a Pid
 
@@ -36,7 +35,7 @@
  iex(2)> Process.alive?(my_process)
  false
 #+END_SRC
- Processes close them selves down when they have nothing left to do.
+ Processes close themselves down when they have nothing left to do.
 
 * Sending messages to processes
 
@@ -44,6 +43,7 @@
  - We can put messages into a process mailbox with `send/2`
  - The process handles messages, or let them rot
 
+ ...
 
 * Sending messages to processes
 #+BEGIN_SRC elixir
@@ -63,6 +63,8 @@
 
  - The process mailbox is a *FIFO* queue
  - We use *receive*-blocks to handle messages in the queue
+
+ ...
 
 * Sending messages to processes
 #+BEGIN_SRC elixir
@@ -99,7 +101,6 @@
  :yo
  :ok
 #+END_SRC
-
  but...
 
 * Sending messages to processes
@@ -109,10 +110,9 @@
  iex(13)> flush
  :ok
 #+END_SRC
-The mailbox has stopped receiving messages!?
+ The mailbox has stopped receiving messages!?
 
-*receive* will only handle one message, and then it will leave the stage (more on that later)
-
+ *receive* will only handle one message, and then it will leave the stage (more on that later)
 
 * Unknown message types
 
@@ -131,8 +131,7 @@ The mailbox has stopped receiving messages!?
  iex(15)> send my_process, {self, :how_do_you_do}
  {#PID<0.59.0>, :how_do_you_do}
 #+END_SRC
-
-...
+ ...
 
 * Unknown message types
 #+BEGIN_SRC elixir
@@ -145,7 +144,7 @@ The mailbox has stopped receiving messages!?
  iex(15)> send my_process, {self, :how_do_you_do}
  {#PID<0.59.0>, :how_do_you_do}
 #+END_SRC
-  - Nothing!
+ - Nothing!
 
 * Unknown message types
 
@@ -154,8 +153,7 @@ The mailbox has stopped receiving messages!?
  - Implement *catch all* matches that discard unknown messages
  - *Process.info(Pid)[:messages]* list messages stored in a process's mailbox
 
-* * *
-
+* Handling failures
 * Handling failures
 
  - Crashing
@@ -166,6 +164,8 @@ The mailbox has stopped receiving messages!?
 * Crashing a spawned process
 
  - First let's crash a regular spawned process
+
+ ...
 
 * Crashing a spawned process
 #+BEGIN_SRC elixir -n
@@ -190,13 +190,14 @@ The mailbox has stopped receiving messages!?
 
  - But! No one got the news about this crash though :-/
 
-
 * Linking processes
 
  - *spawn_link/1* primitive
  - *spawns* *and* *links* the process
 
  ...let's link a process to our iex session and crash it
+
+ ...
 
 * Linking processes
 #+BEGIN_SRC elixir
@@ -211,7 +212,6 @@ The mailbox has stopped receiving messages!?
  Interactive Elixir (1.0.4) - press Ctrl+C to exit (type h() ENTER for help)
  iex(1)>
 #+END_SRC
- ...
 
 * Linking processes
 
@@ -224,6 +224,8 @@ The mailbox has stopped receiving messages!?
 
  - *spawn_monitor/1* primitive
  - spawns *and* monitor the process
+
+ ...
 
 * Monitoring processes
 #+BEGIN_SRC elixir
@@ -239,6 +241,8 @@ The mailbox has stopped receiving messages!?
  - The iex counter didn't crash
  - but if we flush...
 
+ ...
+
 * Monitoring processes
 #+BEGIN_SRC elixir
  iex(3)> flush
@@ -253,9 +257,11 @@ The mailbox has stopped receiving messages!?
 
  - Monitors know when observed processes crash
  - Processes that are observed does not know about dying observers
- - sometimes we want a link relation does not crash both
+ - sometimes we want a link relation that does not crash both ways
 
  Enter trapping errors *Process.flag(:trap_exit, true)*
+
+ ...
 
 * Trapping errors
 #+BEGIN_SRC elixir
@@ -269,14 +275,27 @@ The mailbox has stopped receiving messages!?
  iex(5)> 
 #+END_SRC
 
- The link didn't bring the iex session down
+ - The link didn't bring the iex session down
 
+ ...flush it
+
+* Trapping errors
+#+BEGIN_SRC elixir
+ iex(6)> flush
+ {:EXIT, #PID<0.67.0>,
+  {%RuntimeError{message: "oh my, now that again?"}, [{:erlang, :apply, 2, []}]}}
+ :ok
+#+END_SRC
+ - But we did get a message in the mailbox about it
+ - Notice it is a *{:EXIT, ... }*
 
 * One more thing
 
- Our receive-do-blocks stop receiving after one message.
+ Our receive-do-blocks stopped receiving after one message.
 
  enter the receive-loop pattern ...
+
+ Also, let's see how we will spawn a function on a module
 
 * Spawning a module
 #+BEGIN_SRC elixir
@@ -304,6 +323,7 @@ The mailbox has stopped receiving messages!?
  :hello
  :ok
 #+END_SRC
+ - it just goes on forever
 
 * What we have learned
 
@@ -315,7 +335,7 @@ The mailbox has stopped receiving messages!?
 
  - We can have processes monitor other processes
  - We can link two processes, both go down if one should fail
- - We can trap exits, stopping error cascade
+ - We can trap exits, stopping error cascading upwards
 
 * Smells like some OTP constructs
 
@@ -349,4 +369,12 @@ The mailbox has stopped receiving messages!?
 
  - Processes are not to be feared
  - Use OTP construct where possible
- - https://github.com/gausby/processes_presentation
+
+* Thanks, and a book recommendation
+
+ - Presentation:
+   https://github.com/gausby/processes_presentation
+
+ - Consider buying Elixir in Action by Saša Jurić
+ - Use code *juric37* for 37% discount
+ - http://erlangcentral.org/elixir-in-action-released/
