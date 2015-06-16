@@ -245,7 +245,7 @@ This is the stuff Supervisors and GenServers are made of.
 ### `GenServer`
 Actually a GenServer is an abstraction that creates a `receive`-loop and passes on its state between receives.
 
-`handle_call/3` and `handle_cast/2` are handled in a receive-do-block like the ones we have seen so far--technically they have an internal format, but we would *never* send messages to them directly. Everything that does not fit into that internal format used by cast and call will get passed on to `handle_info/2`.
+`handle_call/3` and `handle_cast/2` are handled in a receive-do-block like the ones we have seen so far--technically they have an internal format, but we would *never* send messages to them directly (we would always send messages to GenServers using `Genserver.call/3` and `Genserver.cast/2`, never `send`). Everything that does not fit into that internal format used by cast and call will get passed on to `handle_info/2`.
 
 When we create a GenServer in Elixir a default `handle_info/2` that just disregard all incoming messages are set up for us. This has an implication: If we overwrite this handler we will have to setup a catch-all handler of our own. Otherwise our server could run out of memory because of processes with mailboxes full of unprocessed messages.
 
