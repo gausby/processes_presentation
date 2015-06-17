@@ -143,6 +143,8 @@
  #PID<0.120.0>
  iex(15)> send my_process, {self, :how_do_you_do}
  {#PID<0.59.0>, :how_do_you_do}
+ iex(16)> flush
+ :ok
 #+END_SRC
  - Nothing!
 
