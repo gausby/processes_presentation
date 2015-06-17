@@ -41,7 +41,7 @@
 
  - Every process has a mailbox
  - We can put messages into a process mailbox with `send/2`
- - The process handles messages, or let them rot
+ - The process handles messages, or lets them rot
 
  ...
 
@@ -81,7 +81,7 @@
 
 * Sending messages to processes
 
- - processes does not know about the sender
+ - processes do not know about the sender
  - they are totally isolated
  - we need to send a tuple like {sender, :message}
 
@@ -183,8 +183,8 @@
 * Crashing a spawned process
 
  - Not pretty, but very *informative*
- - No other *processes was harmed* (isolation)
- - processes created with *spawn/1* encapsulates their failures
+ - No other *processes were harmed* (isolation)
+ - processes created with *spawn/1* encapsulate their failures
 
  ...
 
@@ -217,7 +217,7 @@
 
 * Linking processes
 
- - One crash, both crash
+ - One crashes, both crash
  - Link processes that rely on each other to function
 
  ...if we don't want it to crash we can...
@@ -258,7 +258,7 @@
 * Trapping errors
 
  - Monitors know when observed processes crash
- - Processes that are observed does not know about dying observers
+ - Processes that are observed do not know about dying observers
  - sometimes we want a link relation that does not crash both ways
 
  Enter trapping errors *Process.flag(:trap_exit, true)*
@@ -293,7 +293,7 @@
 
 * One more thing
 
- Our receive-do-blocks stopped receiving after one message.
+ Our receive-do-block stopped receiving after one message.
 
  enter the receive-loop pattern ...
 
@@ -329,8 +329,8 @@
 
 * What we have learned
 
- - All processes has a mailbox
- - receive react on incoming messages
+ - All processes have a mailbox
+ - receive reacts on incoming messages
  - If we want to handle more than one message we would build a receive-loop
 
 * What we have learned
