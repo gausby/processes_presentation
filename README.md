@@ -175,7 +175,7 @@ my_process = spawn_link(fn -> raise "oh my, now that again?" end)
 
 23:28:24.339 [error] Error in process <0.89.0> with exit value: {#{'__exception__'=>true,'__struct__'=>'Elixir.RuntimeError',message=><<22 bytes>>},[{erlang,apply,2,[]}]}
 
-iex(5)> 
+iex(5)>
 ```
 
 Notice that we linked the process, and even though it was linked it did not kill the parent process. A message ended up in the mailbox though:
